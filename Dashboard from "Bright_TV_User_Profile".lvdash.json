@@ -1,0 +1,518 @@
+{
+  "datasets": [
+    {
+      "name": "b2bd8242",
+      "displayName": "Untitled dataset",
+      "queryLines": [
+        "USE CATALOG `workspace`;\n",
+        "USE SCHEMA `date_functions`;\n",
+        "\n",
+        "-- EDA (EXPLORATORY DATA ANALYSIS) ON BRIGHT_TV\n",
+        "-- USER PROFILES\n",
+        "-- VIEWERSHIP\n",
+        "\n",
+        "\n",
+        "-- VIEW WHOLE TABLE BEFORE ANALYSIS\n",
+        "SELECT *\n",
+        "FROM bright.bright_tv.bright_tv_dataset_user_profiles\n",
+        "LIMIT 10;\n",
+        "\n",
+        "\n",
+        "-- HOW BIG IS THE DATA\n",
+        "SELECT COUNT(*) AS number_of_rows \n",
+        "FROM bright.bright_tv.bright_tv_dataset_user_profiles;\n",
+        "\n",
+        "\n",
+        "--- WANT TO CHECK FOR DUPLICATES- Check for userids.\n",
+        "--- If the number of rows is equal to the number of UserIDs, then there are no duplicates in the data.\n",
+        "\n",
+        "SELECT COUNT(*) AS number_of_rows,\n",
+        "       COUNT(DISTINCT UserID) AS number_of_subs\n",
+        "FROM bright.bright_tv.bright_tv_dataset_user_profiles; -- number of rows=number of unique userids. So, no duplicates.\n",
+        "\n",
+        "-- OR\n",
+        "SELECT UserID, COUNT(*) AS duplicate_cnt \n",
+        "FROM bright.bright_tv.bright_tv_dataset_user_profiles\n",
+        "Group by UserID\n",
+        "Having COUNT(*) > 1; -- no rows returned, therefore, no duplicates.\n",
+        "\n",
+        "--- Any rows where userID is null\n",
+        "\n",
+        "SELECT COUNT(*) \n",
+        "FROM bright.bright_tv.bright_tv_dataset_user_profiles\n",
+        "WHERE UserID IS NULL; --- no rows, the count is zero.\n",
+        "\n",
+        "\n",
+        "--- Gender analysis\n",
+        "SELECT DISTINCT gender\n",
+        "FROM bright.bright_tv.bright_tv_dataset_user_profiles; -- male, female, none, empty space\n",
+        "\n",
+        "SELECT COUNT(*)\n",
+        "FROM bright.bright_tv.bright_tv_dataset_user_profiles\n",
+        "WHERE gender IS NULL; -- zero\n",
+        "\n",
+        "SELECT COUNT(*)\n",
+        "FROM bright.bright_tv.bright_tv_dataset_user_profiles\n",
+        "WHERE gender=' '; -- 218 rows with an empty space\n",
+        "\n",
+        "SELECT COUNT(*) AS Cnt,\n",
+        "       COUNT(DISTINCT UserID) AS subs,\n",
+        "    CASE \n",
+        "        WHEN gender = ' ' THEN 'Unknown'\n",
+        "        When gender ilike 'None' THEN 'Unknown'\n",
+        "        ELSE gender\n",
+        "        END AS gender ---maintains the other genders that are not mentioned in the case statement the same.\n",
+        "FROM bright.bright_tv.bright_tv_dataset_user_profiles\n",
+        "GROUP BY gender; -- because of aggregate function 'count()'\n",
+        "-- the output table us ' '= Unknown and 'none'=unknown\n",
+        "-- but the visualization/barchart combines the none and the empty space, so we are sorted.\n",
+        "\n",
+        "\n",
+        "--- TRIM FUNCTION FROM CHATGPT\n",
+        "SELECT\n",
+        "    COUNT(DISTINCT UserID) AS subs,\n",
+        "    gender\n",
+        "FROM (\n",
+        "    SELECT\n",
+        "        UserID,\n",
+        "        CASE\n",
+        "            WHEN gender IS NULL THEN 'Unknown'\n",
+        "            WHEN TRIM(LOWER(gender)) IN ('', 'none') THEN 'Unknown'\n",
+        "            ELSE gender\n",
+        "        END AS gender\n",
+        "    FROM bright.bright_tv.bright_tv_dataset_user_profiles\n",
+        ") t\n",
+        "GROUP BY gender;\n",
+        "\n",
+        "\n",
+        "--- Race analysis\n",
+        "\n",
+        "SELECT Distinct Race\n",
+        "FROM bright.bright_tv.bright_tv_dataset_user_profiles; --- there is 'other','none' and an empty space which needs to be solved/or combined.\n",
+        "\n",
+        "SELECT DISTINCT--- returns all the different races and removes duplicates\n",
+        "    CASE\n",
+        "        WHEN Race IN ('other') THEN 'None'\n",
+        "        WHEN Race =' ' THEN 'None'\n",
+        "    ELSE Race -- return the other races the same\n",
+        "    End as Race\n",
+        "FROM bright.bright_tv.bright_tv_dataset_user_profiles; -- sorted.\n",
+        "\n",
+        "   \n",
+        "--- Is there any row where the RACE ccolumn is NULL?\n",
+        "\n",
+        "SELECT COUNT(*) -- counts all the rows in the RACE column\n",
+        "from bright.bright_tv.bright_tv_dataset_user_profiles\n",
+        "WHERE Race IS NULL; -- Zero which is good.\n",
+        "\n",
+        "\n",
+        "--- Province analysis\n",
+        "\n",
+        "SELECT DISTINCT Province\n",
+        "FROM bright.bright_tv.bright_tv_dataset_user_profiles; --- There is a 'none' and an empty space that needs to be sorted.\n",
+        "-- We need to group them into 1 row/category.\n",
+        "\n",
+        "SELECT DISTINCT\n",
+        "    CASE\n",
+        "        WHEN Province IN (' ') THEN 'Uncategorized'\n",
+        "        WHEN Province IN('None') THEN 'Uncategorized'\n",
+        "        ELSE Province\n",
+        "        END AS region\n",
+        "FROM bright.bright_tv.bright_tv_dataset_user_profiles; --- Sorted.\n",
+        "\n",
+        "---- Age Analysis\n",
+        "\n",
+        "SELECT  Min(Age) as min_age, -- = 0\n",
+        "        max(Age) AS max_age  -- = 114\n",
+        "FROM bright.bright_tv.bright_tv_dataset_user_profiles;\n",
+        "\n",
+        "---Is there a row where age is NULL?\n",
+        "SELECT COUNT(*)\n",
+        "FROM bright.bright_tv.bright_tv_dataset_user_profiles\n",
+        "WHERE Age IS NULL; --- ALL rows have age values. Sorted.\n",
+        "\n",
+        "---- Age brackets/grouping\n",
+        "\n",
+        "SELECT COUNT(DISTINCT userid) AS subs, \n",
+        "    CASE\n",
+        "        WHEN age = 0 THEN 'Infants'\n",
+        "        WHEN age BETWEEN 1 AND 12 THEN 'Kids'\n",
+        "        WHEN age BETWEEN 13 AND 19 THEN 'Teens'\n",
+        "        WHEN age BETWEEN 20 AND 35 THEN 'Youth'\n",
+        "        WHEN age BETWEEN 36 AND 50 THEN 'Adults'\n",
+        "        WHEN age BETWEEN 51 AND 65 THEN 'Senior'\n",
+        "        ELSE 'Madala' --- Even if you don't use 'ELSE',The outcome will be the same.\n",
+        "                    --- Another alternative is: WHEN age>65 the 'Madala'\n",
+        "                    --- will yield the same outcome\n",
+        "    END AS age_group ---Group by the age group otherwise you will have 71 rows if you group as 'age'\n",
+        "FROM bright.bright_tv.bright_tv_dataset_user_profiles\n",
+        "GROUP BY age_group;\n",
+        "\n",
+        "----- NOW TO COMBINE THE ANALYSIS, USE CTE:Combining all the case statements under 1 SELECT STATEMENT.\n",
+        "---------------------------------------------------------------------------------------------------------------\n",
+        "-- CTE: Is a way to break down code that is coming from separate tables.\n",
+        "-- Process code on one table before joining it with the 2nd code from a different table.\n",
+        "-- '<>' and '!=' is the same thing= not equal to\n",
+        "\n",
+        "\n",
+        "WITH user_profiles AS (\n",
+        "SELECT UserID, -- primary key but it is a foreign key on the viewership table.\n",
+        "\n",
+        "    CASE \n",
+        "        WHEN gender = ' ' THEN 'Unknown'\n",
+        "        When gender ilike 'None' THEN 'Unknown'\n",
+        "        ELSE gender\n",
+        "        END AS gender,\n",
+        "\n",
+        "    CASE\n",
+        "        WHEN Race IN ('other') THEN 'None'\n",
+        "        WHEN Race =' ' THEN 'None'\n",
+        "    ELSE Race -- return the other races the same\n",
+        "    End as Race,\n",
+        "\n",
+        "    CASE\n",
+        "        WHEN Province IN (' ') THEN 'Uncategorized'\n",
+        "        WHEN Province IN('None') THEN 'Uncategorized'\n",
+        "        ELSE Province\n",
+        "        END AS region,\n",
+        "    \n",
+        "    CASE\n",
+        "        WHEN age = 0 THEN 'Infants'\n",
+        "        WHEN age BETWEEN 1 AND 12 THEN 'Kids'\n",
+        "        WHEN age BETWEEN 13 AND 19 THEN 'Teens'\n",
+        "        WHEN age BETWEEN 20 AND 35 THEN 'Youth'\n",
+        "        WHEN age BETWEEN 36 AND 50 THEN 'Adults'\n",
+        "        WHEN age BETWEEN 51 AND 65 THEN 'Senior'\n",
+        "        ELSE 'Madala'\n",
+        "    END AS age_group,\n",
+        "\n",
+        "    CASE\n",
+        "        WHEN (`Social Media Handle` IS NOT NULL) OR (`Social Media Handle`!=' ') OR (`Social Media Handle` NOT IN ('None') ) THEN 1\n",
+        "        ELSE 0\n",
+        "    END AS social_flag,\n",
+        "\n",
+        "    CASE \n",
+        "        WHEN (Email IS NOT NULL) OR (Email <>' ') OR (Email NOT IN ('None') ) THEN 1\n",
+        "        ELSE 0\n",
+        "    END AS email_flag\n",
+        "\n",
+        "FROM bright.bright_tv.bright_tv_dataset_user_profiles\n",
+        "),\n",
+        "viewership AS\n",
+        "(\n",
+        "    SELECT\n",
+        "\n",
+        "    -- Date\n",
+        "    COALESCE(UserID0,userid4,0)AS userid, --- Initially, I named this column as 'user_id' and when I had to join the 2 tables, the code failed because of the ambiguity. Now Left joining the two tables works. So, I am SORTED!!!!\n",
+        "    \n",
+        "    TO_CHAR(TO_DATE(RecordDate2),'yyyyMM') AS month_id, -- TO_CHAR(): converts a date into a string and TO_DATE(): converts a string into a date\n",
+        "    TO_DATE(RecordDate2) AS watch_date, -- extract the date from the time stamp\n",
+        "   -- TIME(RecordDate2) AS watch_time,\n",
+        "    DAY(RecordDate2) AS day_of_month,\n",
+        "    DAYNAME(RecordDate2) AS day_name,\n",
+        "    MONTHNAME(RecordDate2) AS month_name,\n",
+        "\n",
+        "--TIME\n",
+        "-- A timestamp records the date and time of an event\n",
+        "\n",
+        "date_format(RecordDate2,'HH:mm:ss') AS watch_time, -- The DATE_FORMAT(): Extracts the date and or time from the timestamp\n",
+        "HOUR(RecordDate2) AS hour_of_day,\n",
+        "\n",
+        "CASE \n",
+        "    WHEN watch_time BETWEEN '00:00:00' AND '05:59:59' THEN 'Night_surfer'\n",
+        "    WHEN watch_time BETWEEN '06:00:00' AND '11:59:59' THEN 'Morning'\n",
+        "    WHEN watch_time BETWEEN '12:00:00' AND '16:59:59' THEN 'Afternoon'\n",
+        "    WHEN watch_time BETWEEN '17:00:00' AND '29:59:59' THEN 'Evening'\n",
+        "END AS time_of_day,\n",
+        "\n",
+        "date_format(`Duration 2`,'HH:mm:ss') AS duration, \n",
+        "CASE \n",
+        "    WHEN duration BETWEEN '00:00:00' AND '00:30:00' THEN 'low_stream'\n",
+        "    WHEN duration BETWEEN '00:30:01' AND '00:59:59' THEN 'med_stream'\n",
+        "    WHEN duration> '01:00:00' THEN 'high_stream'\n",
+        "END AS stream_duration,\n",
+        "\n",
+        "\n",
+        "CASE \n",
+        "    WHEN day_name IN ('Sat','Sun') THEN 'weekend'\n",
+        "    ELSE 'weekday'\n",
+        "END AS day_category,\n",
+        "\n",
+        "\n",
+        "CASE\n",
+        "    WHEN Channel2 IN ('SawSee','SawSee') THEN 'Sawsee'  \n",
+        "    WHEN Channel2 IN('SuperSport Live Events', 'Live on SuperSport','Supersport Live Events','DStv Events 1') THEN 'Live Events'\n",
+        "       \n",
+        "    ELSE Channel2\n",
+        "    END AS TV_Channel\n",
+        "\n",
+        "\n",
+        "FROM bright.bright_tv.bright_tv_dataset_viewership\n",
+        ")\n",
+        "\n",
+        "SELECT COALESCE(A.userid,B.userid) AS sub_id,\n",
+        "       month_id,\n",
+        "       watch_date,\n",
+        "       day_of_month,\n",
+        "       day_name,\n",
+        "       month_name,\n",
+        "       watch_time,\n",
+        "       hour_of_day,\n",
+        "       time_of_day,\n",
+        "       duration,\n",
+        "       stream_duration,\n",
+        "       day_category,\n",
+        "       TV_Channel,\n",
+        "       gender,\n",
+        "       Race,\n",
+        "       region,\n",
+        "       age_group,\n",
+        "       social_flag,\n",
+        "       email_flag\n",
+        "\n",
+        "FROM viewership AS A\n",
+        "LEFT JOIN\n",
+        "user_profiles AS B\n",
+        "on A.userid=B.userid\n",
+        "GROUP BY ALL\n",
+        ";\n",
+        "\n",
+        "--- LEFT JOIN FINALLY WORKED!\n",
+        "-- The issue was with the ambiguity of the 'Userid/ userID,user_id'\n",
+        "-- After running the CTE,\n",
+        "--You need to aggregate, by counting and grouping by all.\n",
+        "-- Download the outcome table as an excel file (csv)\n",
+        "-- start building visuals from this aggregated table.\n",
+        "\n",
+        "-- Subscribers per region: USE COUNT DISTINCT()\n",
+        "-- Views per region: USE COUNT()\n"
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "name": "7e5f39ee",
+      "displayName": "Untitled Page",
+      "layout": [
+        {
+          "widget": {
+            "name": "fefd2943",
+            "queries": [
+              {
+                "name": "9023934c94564c058b2f72031c0d8685",
+                "query": {
+                  "datasetName": "b2bd8242",
+                  "fields": [
+                    {
+                      "name": "region",
+                      "expression": "`region`"
+                    },
+                    {
+                      "name": "column_e893991d19",
+                      "expression": "COUNT(DISTINCT `sub_id`)"
+                    },
+                    {
+                      "name": "gender",
+                      "expression": "`gender`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 0,
+              "viz_spec": {
+                "display_name": "Unique subscribers by region",
+                "viz_type": "CHART",
+                "serialized_options": "{\"isAggregationOn\":true,\"series\":{\"error_y\":{\"type\":\"data\",\"visible\":true},\"stacking\":\"stack\"},\"coefficient\":1,\"yAxis\":[{\"type\":\"-\"},{\"opposite\":true,\"type\":\"-\"}],\"columnConfigurationMap\":{\"series\":{\"column\":\"gender\",\"id\":\"column_e893991d21\"},\"x\":{\"column\":\"region\",\"id\":\"column_e893991d17\"},\"y\":[{\"column\":\"sub_id\",\"id\":\"column_e893991d19\",\"transform\":\"COUNT_DISTINCT\"}]},\"alignYAxesAtZero\":true,\"direction\":{\"type\":\"counterclockwise\"},\"swappedAxes\":false,\"percentFormat\":\"0[.]00%\",\"textFormat\":\"\",\"legend\":{\"traceorder\":\"normal\"},\"globalSeriesType\":\"column\",\"version\":2,\"sizemode\":\"diameter\",\"seriesOptions\":{\"column_e893991d19\":{\"type\":\"column\",\"yAxis\":0}},\"error_y\":{\"type\":\"data\",\"visible\":true},\"sortX\":true,\"showDataLabels\":false,\"missingValuesAsZero\":true,\"useAggregationsUi\":true,\"numberFormat\":\"0,0.[00000]\",\"dateTimeFormat\":\"DD/MM/YYYY HH:mm\",\"sortY\":true,\"valuesOptions\":{},\"xAxis\":{\"labels\":{\"enabled\":true},\"type\":\"-\"}}",
+                "query_name": "9023934c94564c058b2f72031c0d8685"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 3,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "960d8cfa",
+            "queries": [
+              {
+                "name": "9023934c94564c058b2f72031c0d8685",
+                "query": {
+                  "datasetName": "b2bd8242",
+                  "fields": [
+                    {
+                      "name": "gender",
+                      "expression": "`gender`"
+                    },
+                    {
+                      "name": "column_31c149d517",
+                      "expression": "COUNT(DISTINCT `sub_id`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 0,
+              "viz_spec": {
+                "display_name": "Viewership distribution by gender",
+                "viz_type": "CHART",
+                "serialized_options": "{\"isAggregationOn\":true,\"series\":{\"error_y\":{\"type\":\"data\",\"visible\":true},\"stacking\":null},\"coefficient\":1,\"yAxis\":[{\"type\":\"-\"},{\"opposite\":true,\"type\":\"-\"}],\"columnConfigurationMap\":{\"x\":{\"column\":\"gender\",\"id\":\"column_31c149d514\"},\"y\":[{\"column\":\"sub_id\",\"id\":\"column_31c149d517\",\"transform\":\"COUNT_DISTINCT\"}]},\"alignYAxesAtZero\":true,\"direction\":{\"type\":\"counterclockwise\"},\"swappedAxes\":false,\"percentFormat\":\"0[.]00%\",\"textFormat\":\"\",\"legend\":{\"traceorder\":\"normal\"},\"globalSeriesType\":\"pie\",\"version\":2,\"sizemode\":\"diameter\",\"seriesOptions\":{\"column_31c149d517\":{\"type\":\"pie\",\"yAxis\":0}},\"error_y\":{\"type\":\"data\",\"visible\":true},\"sortX\":true,\"showDataLabels\":true,\"missingValuesAsZero\":true,\"useAggregationsUi\":true,\"numberFormat\":\"0,0.[00000]\",\"dateTimeFormat\":\"DD/MM/YYYY HH:mm\",\"sortY\":true,\"valuesOptions\":{},\"xAxis\":{\"labels\":{\"enabled\":true},\"type\":\"-\"}}",
+                "query_name": "9023934c94564c058b2f72031c0d8685"
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 0,
+            "width": 3,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "91aa4605",
+            "queries": [
+              {
+                "name": "9023934c94564c058b2f72031c0d8685",
+                "query": {
+                  "datasetName": "b2bd8242",
+                  "fields": [
+                    {
+                      "name": "age_group",
+                      "expression": "`age_group`"
+                    },
+                    {
+                      "name": "column_31c149d533",
+                      "expression": "COUNT(DISTINCT `duration`)"
+                    },
+                    {
+                      "name": "stream_duration",
+                      "expression": "`stream_duration`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 0,
+              "viz_spec": {
+                "display_name": "Stream duration by age_group",
+                "viz_type": "CHART",
+                "serialized_options": "{\"isAggregationOn\":true,\"series\":{\"error_y\":{\"type\":\"data\",\"visible\":true},\"stacking\":\"\"},\"coefficient\":1,\"yAxis\":[{\"type\":\"-\"},{\"opposite\":true,\"type\":\"-\"}],\"columnConfigurationMap\":{\"series\":{\"column\":\"stream_duration\",\"id\":\"column_31c149d541\"},\"x\":{\"column\":\"age_group\",\"id\":\"column_31c149d542\"},\"y\":[{\"column\":\"duration\",\"id\":\"column_31c149d533\",\"transform\":\"COUNT_DISTINCT\"}]},\"alignYAxesAtZero\":true,\"direction\":{\"type\":\"counterclockwise\"},\"swappedAxes\":false,\"percentFormat\":\"0[.]00%\",\"textFormat\":\"\",\"legend\":{\"traceorder\":\"normal\"},\"globalSeriesType\":\"column\",\"version\":2,\"sizemode\":\"diameter\",\"seriesOptions\":{\"column_31c149d524\":{\"type\":\"column\",\"yAxis\":0},\"column_31c149d533\":{\"type\":\"column\",\"yAxis\":0}},\"error_y\":{\"type\":\"data\",\"visible\":true},\"sortX\":true,\"showDataLabels\":false,\"missingValuesAsZero\":true,\"useAggregationsUi\":true,\"numberFormat\":\"0,0.[00000]\",\"dateTimeFormat\":\"DD/MM/YYYY HH:mm\",\"sortY\":true,\"valuesOptions\":{},\"xAxis\":{\"labels\":{\"enabled\":true},\"type\":\"-\"}}",
+                "query_name": "9023934c94564c058b2f72031c0d8685"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 6,
+            "width": 3,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "893798ee",
+            "queries": [
+              {
+                "name": "9023934c94564c058b2f72031c0d8685",
+                "query": {
+                  "datasetName": "b2bd8242",
+                  "fields": [
+                    {
+                      "name": "hour_of_day",
+                      "expression": "`hour_of_day`"
+                    },
+                    {
+                      "name": "column_31c149d548",
+                      "expression": "COUNT(DISTINCT `sub_id`)"
+                    },
+                    {
+                      "name": "Race",
+                      "expression": "`Race`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 0,
+              "viz_spec": {
+                "display_name": "Stream time by race",
+                "viz_type": "CHART",
+                "serialized_options": "{\"isAggregationOn\":true,\"series\":{\"error_y\":{\"type\":\"data\",\"visible\":true},\"stacking\":null},\"coefficient\":1,\"yAxis\":[{\"type\":\"-\"},{\"opposite\":true,\"type\":\"-\"}],\"columnConfigurationMap\":{\"series\":{\"column\":\"Race\",\"id\":\"column_31c149d552\"},\"x\":{\"column\":\"hour_of_day\",\"id\":\"column_31c149d546\"},\"y\":[{\"column\":\"sub_id\",\"id\":\"column_31c149d548\",\"transform\":\"COUNT_DISTINCT\"}]},\"alignYAxesAtZero\":true,\"direction\":{\"type\":\"counterclockwise\"},\"swappedAxes\":false,\"percentFormat\":\"0[.]00%\",\"textFormat\":\"\",\"legend\":{\"traceorder\":\"normal\"},\"globalSeriesType\":\"line\",\"version\":2,\"sizemode\":\"diameter\",\"seriesOptions\":{\"column_31c149d548\":{\"type\":\"line\",\"yAxis\":0}},\"error_y\":{\"type\":\"data\",\"visible\":true},\"sortX\":true,\"showDataLabels\":false,\"missingValuesAsZero\":true,\"useAggregationsUi\":true,\"numberFormat\":\"0,0.[00000]\",\"dateTimeFormat\":\"DD/MM/YYYY HH:mm\",\"sortY\":true,\"valuesOptions\":{},\"xAxis\":{\"labels\":{\"enabled\":true},\"type\":\"-\"}}",
+                "query_name": "9023934c94564c058b2f72031c0d8685"
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 6,
+            "width": 3,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "e7f77f86",
+            "queries": [
+              {
+                "name": "9023934c94564c058b2f72031c0d8685",
+                "query": {
+                  "datasetName": "b2bd8242",
+                  "fields": [
+                    {
+                      "name": "region",
+                      "expression": "`region`"
+                    },
+                    {
+                      "name": "column_c1c5157832",
+                      "expression": "COUNT(DISTINCT `sub_id`)"
+                    },
+                    {
+                      "name": "gender",
+                      "expression": "`gender`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 0,
+              "viz_spec": {
+                "display_name": "Visualization 1",
+                "viz_type": "CHART",
+                "serialized_options": "{\"isAggregationOn\":true,\"series\":{\"error_y\":{\"type\":\"data\",\"visible\":true},\"stacking\":\"stack\"},\"coefficient\":1,\"yAxis\":[{\"type\":\"-\"},{\"opposite\":true,\"type\":\"-\"}],\"columnConfigurationMap\":{\"series\":{\"column\":\"gender\",\"id\":\"column_c1c5157835\"},\"x\":{\"column\":\"region\",\"id\":\"column_c1c5157834\"},\"y\":[{\"column\":\"sub_id\",\"id\":\"column_c1c5157832\",\"transform\":\"COUNT_DISTINCT\"}]},\"alignYAxesAtZero\":true,\"direction\":{\"type\":\"counterclockwise\"},\"swappedAxes\":false,\"percentFormat\":\"0[.]00%\",\"textFormat\":\"\",\"legend\":{\"traceorder\":\"normal\"},\"globalSeriesType\":\"column\",\"version\":2,\"sizemode\":\"diameter\",\"seriesOptions\":{\"column_c1c5157832\":{\"type\":\"column\",\"yAxis\":0}},\"error_y\":{\"type\":\"data\",\"visible\":true},\"sortX\":true,\"showDataLabels\":false,\"missingValuesAsZero\":true,\"useAggregationsUi\":true,\"numberFormat\":\"0,0.[00000]\",\"dateTimeFormat\":\"DD/MM/YYYY HH:mm\",\"sortY\":true,\"valuesOptions\":{},\"xAxis\":{\"labels\":{\"enabled\":true},\"type\":\"-\"}}",
+                "query_name": "9023934c94564c058b2f72031c0d8685"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 12,
+            "width": 3,
+            "height": 6
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS"
+    }
+  ],
+  "uiSettings": {
+    "theme": {
+      "widgetHeaderAlignment": "ALIGNMENT_UNSPECIFIED"
+    },
+    "applyModeEnabled": false
+  }
+}
