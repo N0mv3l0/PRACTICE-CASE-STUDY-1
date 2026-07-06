@@ -9,3 +9,7 @@ https://miro.com/welcomeonboard/SWI4Sis2Nk5GY3RwQzdFS3VqTFZzb0pqeFZBZXI0cE5FMUpV
 Dashboard
 
 https://dbc-f0761396-3c73.cloud.databricks.com/sql/dashboardsv3/01f173b0620e1708b2261252ca7ecebe?o=7474658285210116
+
+Exercise: Bright_TV dashboard: Databricks
+
+https://dbc-f0761396-3c73.cloud.databricks.com/sql/dashboardsv3/01f177cbf04e1300acfebc324afe3bec/pages/b72d83a8?o=7474658285210116
