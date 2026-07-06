@@ -13,3 +13,7 @@ https://dbc-f0761396-3c73.cloud.databricks.com/sql/dashboardsv3/01f173b0620e1708
 Exercise: Bright_TV dashboard: Databricks
 
 https://dbc-f0761396-3c73.cloud.databricks.com/sql/dashboardsv3/01f177cbf04e1300acfebc324afe3bec/pages/b72d83a8?o=7474658285210116
+
+Exercise: Bright_TV dashboard: Google Data Studio
+
+https://datastudio.google.com/s/rRvNnJbq_MY
