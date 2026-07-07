@@ -18,5 +18,7 @@ Exercise: Bright_TV dashboard: Google Data Studio
 
 https://datastudio.google.com/s/rRvNnJbq_MY
 
-Lovable interactive dashboard
+
+Lovable interactive dashboard & data Agent
+
 https://analyze-bright-tv-dashboard.lovable.app
