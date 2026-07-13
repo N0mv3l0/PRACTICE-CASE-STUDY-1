@@ -86,7 +86,7 @@ Throughout this case study, I learned how to:
 * Write SQL queries to transform and aggregate data.
 * Handle missing and inconsistent data effectively.
 * Design meaningful KPIs for business stakeholders.
-* Build interactive dashboards using Excel.
+* Build interactive dashboards using lovable and data agents.
 * Select appropriate visualizations for different business questions.
 * Translate data into actionable business recommendations.
 * Communicate analytical findings in a clear and business-focused manner.
