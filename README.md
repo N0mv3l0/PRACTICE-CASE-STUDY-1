@@ -22,6 +22,7 @@ Tools Used
 * Google Data Studio
 * Lovable
 * Power BI
+* Data Agent (https://dbc-f0761396-3c73.cloud.databricks.com/genie/rooms/01f184e880c217a4a6721014fecc93ac?o=7474658285210116)
 
 Dashboard Features
 
